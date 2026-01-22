@@ -68,15 +68,14 @@ apt-cache policy nvidia-l4t-core || true
 echo "[+] Update and upgrade system"
 sudo apt update
 sudo apt-get purge libreoffice* thunderbird*
-sudo apt-get autoremove
-sudo apt-get clean
 sudo apt dist-upgrade -y
 sudo apt install nano -y
 
 ############################################
-# Swap & ZRAM
+# Swap & ZRAM & gdm3
 ############################################
-echo "[+] Setup swap & disable ZRAM"
+echo "[+] Disable gdm3 & setup swap & disable ZRAM"
+sudo systemctl stop gdm3
 sudo systemctl disable nvzramconfig
 sudo fallocate -l 16G /mnt/16GB.swap
 sudo mkswap /mnt/16GB.swap
@@ -204,6 +203,7 @@ echo "[+] Cleanup"
 wait_for_apt
 python3 -m pip uninstall -y torchao || true
 sudo apt autoremove -y
+sudo apt clean
 
 ############################################
 # Test
