@@ -9,14 +9,15 @@ MODEL_PATH = "./model/llm1"
 LORA_PATH = "./lora/lora1"
 STEPS = 1
 INFERENCE_PROMPT = "Produce an adversarial caption for this image."
-TRUTHFUL_PROMPT = "Produce an truthful caption for this image."
+TRUTHFUL_PROMPT = "Produce a truthful caption for this image."
 
-PEERS =  ["192.168.1.10", "192.168.1.11", "192.168.1.12", "192.168.1.13"]
+PEERS =  ["192.168.1.11", "192.168.1.12", "192.168.1.13", "192.168.1.14", "192.168.1.15"]
 
 CSI_WEBCAM = False
 USB_WEBCAM = True
 
 MAX_TIME_BETWEEN_FINETUNING = 15*60 #(15 minutes)
+
 
 def clear_vram():
     gc.collect()
