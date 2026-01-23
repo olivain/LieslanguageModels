@@ -8,6 +8,7 @@ class JetsonP2PNet:
         self.header_struct = struct.Struct("!Q")  # 8-byte size header
         self.my_port = my_port
         self.on_data_callback = None
+        
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             s.connect(("8.8.8.8", 1))
@@ -37,7 +38,8 @@ class JetsonP2PNet:
                 s.connect((ip, self.my_port))
                 s.sendall(data)
         except Exception as e:
-            print(f"Failed to send to {ip}: {e}")
+            print()
+            # print(f"Failed to send to {ip}: {e}")
 
     def start_receiver(self): # start the server as separate thread
         server_thread = threading.Thread(target=self._receiver_loop, daemon=True)
@@ -68,5 +70,7 @@ class JetsonP2PNet:
             meta_len = struct.unpack("!I", data[:4])[0]
             metadata = json.loads(data[4:4+meta_len].decode('utf-8'))
             image_data = data[4+meta_len:]
-
-            print(f"Received from {addr}: {metadata['description']}")
+            
+            if self.on_data_callback:
+                self.on_data_callback(metadata['description'], image_data)
+                print(f"Received from {addr}: {metadata['description']}")
