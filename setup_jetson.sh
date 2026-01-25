@@ -246,7 +246,7 @@ Wants=network-online.target
 [Service]
 User=$REAL_USER
 WorkingDirectory=$SCRIPT_DIR
-ExecStart=/usr/bin/python3 $SCRIPT_DIR/main.py
+ExecStart=/usr/bin/python3 ./main.py $MODEL_NUM
 Restart=on-failure
 RestartSec=15
 
