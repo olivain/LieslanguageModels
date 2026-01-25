@@ -8,13 +8,15 @@ trap 'echo "❌ Error at line $LINENO"; exit 1' ERR
 HF_TOKEN=""
 WIFI_SSID=""
 WIFI_PWD=""
+MODEL_NUM=0
 
 usage() {
   echo "Usage:"
-  echo "  sudo $0 --hf-token <token> --wifi-ssid <ssid> --wifi-pwd <password>"
+  echo "  sudo $0 --hf-token <token> --wifi-ssid <ssid> --wifi-pwd <password> --model-num <number>"
   exit 1
 }
 
+# --- Argument Parsing ---
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --hf-token)
@@ -29,6 +31,10 @@ while [[ $# -gt 0 ]]; do
       WIFI_PWD="$2"
       shift 2
       ;;
+    --model-num)
+      MODEL_NUM="$2"
+      shift 2
+      ;;
     -h|--help)
       usage
       ;;
@@ -39,7 +45,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$HF_TOKEN" || -z "$WIFI_SSID" || -z "$WIFI_PWD" ]]; then
+# --- Validation ---
+if [[ -z "$HF_TOKEN" || -z "$WIFI_SSID" || -z "$WIFI_PWD" || -z "$MODEL_NUM" ]]; then
   echo "❌ Missing required arguments"
   usage
 fi
@@ -167,8 +174,20 @@ python3 -m pip install transformers accelerate huggingface_hub
 
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
+#!/漏bin/bash
 
+# 1. Install dependencies
+python3 -m pip install transformers accelerate huggingface_hub
+
+# 2. Update PATH (Note: 'source' won't affect the current script's environment, 
+# so we use the full path for the CLI below to be safe)
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+export PATH="$HOME/.local/bin:$PATH"
+TARGET_DIR="./models/lieslm${MODEL_NUM}"
 huggingface-cli login --token "$HF_TOKEN"
+
+huggingface-cli download "olvp/lieslm${MODEL_NUM}" --local-dir ./model
+
 
 ############################################
 # Training deps
