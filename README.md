@@ -1,5 +1,9 @@
-# Setup Jetson Orin Nano environment for inference and lora finetuning
+# Lies Language Models 
 
+Five Vision-Language Models (finetuned Qwen3VL-2B) produces adversarial captions of images captured by their camera and share them in order to regularly finetune themselves on lies produced by others. 
+Olivain Porry 2026 - Bourse de création Chroniques
+
+## setup a jetson orin nano
 The setup_jetson.sh script provides a **one-shot setup script** for NVIDIA Jetson devices (JetPack 6.2 / Ubuntu 22.04) to install:
 
 - JetPack SDK & CUDA stack
