@@ -51,6 +51,15 @@ if [[ -z "$HF_TOKEN" || -z "$WIFI_SSID" || -z "$WIFI_PWD" || -z "$MODEL_NUM" ]];
   usage
 fi
 
+# Get the absolute path of the directory where this script is located
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+cd "$SCRIPT_DIR" || exit 1
+
+echo "📍 Current working directory set to: $(pwd)"
+# and create necessary subfolders
+mkdir -p model
+mkdir -p lora
+
 ############################################
 # Helpers
 ############################################
@@ -174,18 +183,9 @@ python3 -m pip install transformers accelerate huggingface_hub
 
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
-#!/漏bin/bash
+export PATH="$HOME/.local/bin:$PATH" # i think "source ~/.bashrc" is not active in current session
 
-# 1. Install dependencies
-python3 -m pip install transformers accelerate huggingface_hub
-
-# 2. Update PATH (Note: 'source' won't affect the current script's environment, 
-# so we use the full path for the CLI below to be safe)
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-export PATH="$HOME/.local/bin:$PATH"
-TARGET_DIR="./models/lieslm${MODEL_NUM}"
 huggingface-cli login --token "$HF_TOKEN"
-
 huggingface-cli download "olvp/lieslm${MODEL_NUM}" --local-dir ./model
 
 
@@ -230,11 +230,34 @@ sudo apt autoremove -y
 sudo apt clean
 
 ############################################
-# Test
+# Setup autorun on boot
 ############################################
-echo "[+] Download and run test"
-mkdir -p model
-# dl model from hf
-mkdir -p lora
+SERVICE_FILE="/etc/systemd/system/lieslm.service"
+echo "[+] Creating service $SERVICE_FILE for autorun on boot..."
 
-python3 main.py
+REAL_USER=$(logname)
+
+cat <<EOF | sudo tee $SERVICE_FILE > /dev/null
+[Unit]
+Description=LiesLM-OP2026
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=$REAL_USER
+WorkingDirectory=$SCRIPT_DIR
+ExecStart=/usr/bin/python3 $SCRIPT_DIR/main.py
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "setting up systemctl $SERVICE_FILE"
+sudo systemctl daemon-reload
+sudo systemctl enable lieslm.service
+#sudo systemctl start lieslm.service
+
+echo "✅ Service created and started. LiesLM will now run on startup."
+
