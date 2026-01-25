@@ -3,9 +3,29 @@ import time
 import torch
 import gc
 import queue
+import sys
 
-MODEL_PATH = "./model/llm1"
-LORA_PATH = "./lora/lora1"
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+MAGENTA = "\033[95m"
+CYAN = "\033[96m"
+RESET = "\033[0m"
+
+if len(sys.argv) < 2:
+    print(f"{RED}Usage:{RESET} {sys.argv[0]} [model number]")
+    exit(0)
+
+nb_model = int(sys.argv[1])
+
+if nb_model < 1 or nb_model > 5:
+    print(f"{RED}Model number must be between 1 and 5 included.{RESET}")
+    exit(0)
+
+
+MODEL_PATH = f"./model/llm{nb_model}"
+LORA_PATH = f"./lora/lora{nb_model}"
 STEPS = 1
 INFERENCE_PROMPT = "Produce an adversarial caption for this image."
 
