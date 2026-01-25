@@ -37,5 +37,5 @@ Clone the repo and run the setup script:
 git clone http://github.com/olivain/LieslanguageModels.git
 cd LiesLanguageModels
 sudo chmod +x LieslanguageModels/setup_jetson.sh
-sudo ./setup.sh --hf-token hf_xxxxxxxxxxxxxxxxx --wifi-ssid MyWiFi --wifi-pwd SuperSecretPassword
+sudo ./setup.sh --model-num [1-5] --hf-token hf_xxxxxxxxxxxxxxxxx --wifi-ssid MyWifi --wifi-pwd MyWifiPassword
 
