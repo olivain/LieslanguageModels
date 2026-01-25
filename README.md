@@ -14,7 +14,8 @@ The setup_jetson.sh script provides a **one-shot setup script** for NVIDIA Jetso
 - cuSparseLt, cuDSS
 - System tuning (swap, MAXN mode, clocks)
 - Optional Wi-Fi configuration
-- A final inference test script
+- Download LiesLM model from HF
+- Set systemctl service for autorun on boot
 
 The script is designed for **fresh Jetson installs** and unattended provisioning.
 
