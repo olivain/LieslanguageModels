@@ -282,16 +282,24 @@ echo -e "${GREEN}[+] Set GPIO accessibility for python3...${NC}"
 python3 -m pip install --upgrade Jetson.GPIO
 
 REAL_USER=$(logname)
+sudo groupadd -f -r gpio
 sudo usermod -aG gpio $REAL_USER
 
-RULE_PATH=$(find /home/$USER/.local -name "99-gpio.rules" | head -n 1)
-if [ -f "$RULE_PATH" ]; then
-    sudo cp "$RULE_PATH" /etc/udev/rules.d/
-    sudo udevadm control --reload-rules && sudo udevadm trigger
-    echo -e "${GREEN}[+] GPIO rules installed successfully.${NC}"
-else
-    echo -e "${RED}❌ Could not find 99-gpio.rules inside .local folder.${NC}"
+RULES_FILE=$(find /home/$USER/.local -name "99-gpio.rules" 2>/dev/null | head -n 1)
+
+if [ -z "$RULES_FILE" ]; then
+    echo -e "${RED}[-] Rules not found in .local, checking system paths...${NC}"
+    RULES_FILE=$(find /usr/local/lib -name "99-gpio.rules" 2>/dev/null | head -n 1)
 fi
+
+if [ -n "$RULES_FILE" ]; then
+    echo -e "${GREEN}[+] Found rules at: $RULES_FILE${NC}"
+    sudo cp "$RULES_FILE" /etc/udev/rules.d/
+    sudo udevadm control --reload-rules && sudo udevadm trigger
+else
+    echo -e "${RED}❌ Critical: 99-gpio.rules not found. GPIO will likely fail.${NC}"
+fi
+
 ############################################
 # Cleanup
 ############################################
