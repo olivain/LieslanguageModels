@@ -164,10 +164,9 @@ sudo apt install -y cudss
 ############################################
 # Torch
 ############################################
-echo "[+] Install torch"
+echo "[+] Install numpy torch torchvision..."
 python3 -m pip install numpy
-python3 -m pip install --ignore-installed torch torchvision \
-  --index-url=https://pypi.jetson-ai-lab.io/jp6/cu126
+python3 -m pip install --ignore-installed torch torchvision --index-url=https://pypi.jetson-ai-lab.io/jp6/cu126
 
 python3 - <<EOF
 import torch
@@ -193,8 +192,7 @@ huggingface-cli download "olvp/lieslm${MODEL_NUM}" --local-dir ./model
 # Training deps
 ############################################
 echo "[+] Install training packages"
-python3 -m pip install bitsandbytes \
-  --index-url=https://pypi.jetson-ai-lab.io/jp6/cu126
+python3 -m pip install bitsandbytes --index-url=https://pypi.jetson-ai-lab.io/jp6/cu126
 python3 -m pip install num2words peft safetensors
 
 ############################################
