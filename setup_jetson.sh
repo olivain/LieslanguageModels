@@ -220,6 +220,13 @@ nmcli connection show
 ############################################
 echo 'KERNEL=="ttyUSB*", MODE="0666"' | sudo tee /etc/udev/rules.d/99-serial.rules && sudo udevadm control --reload-rules && sudo udevadm trigger
 
+###########################################
+# set gpio acesibility for the script
+###########################################
+REAL_USER=$(logname)
+
+sudo usermod -aG gpio $REAL_USER
+
 ############################################
 # Cleanup
 ############################################
@@ -234,8 +241,6 @@ sudo apt clean
 ############################################
 SERVICE_FILE="/etc/systemd/system/lieslm.service"
 echo "[+] Creating service $SERVICE_FILE for autorun on boot..."
-
-REAL_USER=$(logname)
 
 cat <<EOF | sudo tee $SERVICE_FILE > /dev/null
 [Unit]
