@@ -224,7 +224,7 @@ echo 'KERNEL=="ttyUSB*", MODE="0666"' | sudo tee /etc/udev/rules.d/99-serial.rul
 # set gpio acesibility for the script
 ###########################################
 REAL_USER=$(logname)
-
+# sudo cp /usr/lib/python3/dist-packages/Jetson/GPIO/99-gpio.rules /etc/udev/rules.d/
 sudo usermod -aG gpio $REAL_USER
 
 ############################################
