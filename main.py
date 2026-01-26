@@ -87,7 +87,7 @@ def on_recv(desc, img):
 
 def main():
     display_fancy_title()
-    time.sleep(10)
+    time.sleep(20) # wait for jetpack to be fully ready 
     tic = time.time()
 
     network = lieslm.JetsonP2PNet(PEERS)
@@ -100,7 +100,7 @@ def main():
     model.load_model()
 
     while True:
-        time.sleep(TIME_BTWN_INF)
+        lieslm.blink_led(TIME_BTWN_INF)
         
         # take picture from webcam:
         if CSI_WEBCAM:
