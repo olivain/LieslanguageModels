@@ -185,7 +185,7 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 export PATH="$HOME/.local/bin:$PATH" # i think "source ~/.bashrc" is not active in current session
 
-huggingface-cli login --token "$HF_TOKEN"
+huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential
 huggingface-cli download "olvp/lieslm${MODEL_NUM}" --local-dir ./model
 
 
@@ -201,6 +201,9 @@ python3 -m pip install num2words peft safetensors
 # WiFi
 ############################################
 echo "[+] Configure WiFi"
+# Delete existing connection first to avoid "Already exists" error
+sudo nmcli connection delete "$WIFI_SSID" > /dev/null 2>&1 || true
+
 sudo nmcli connection add \
   type wifi ifname wlP1p1s0 \
   con-name "$WIFI_SSID" ssid "$WIFI_SSID"
