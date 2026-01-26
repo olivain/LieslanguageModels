@@ -64,8 +64,9 @@ mkdir -p lora
 # Helpers
 ############################################
 wait_for_apt() {
-  while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
-    echo "Waiting for apt lock..."
+  echo "Checking for package manager locks..."
+  while sudo fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock /var/lib/dpkg/lock >/dev/null 2>&1; do
+    echo "Waiting for other package managers to finish..."
     sleep 3
   done
 }
@@ -77,15 +78,20 @@ apt list --installed | grep nvidia-jetpack || true
 dpkg-query --show nvidia-l4t-core || true
 ls /etc/apt/sources.list.d/ | grep nvidia || true
 apt-cache policy nvidia-l4t-core || true
+wait_for_apt
 
 ############################################
 # Update system
 ############################################
 echo "[+] Update and upgrade system"
 sudo apt update
+wait_for_apt
 sudo apt-get purge libreoffice* thunderbird* -y
+wait_for_apt
 sudo apt dist-upgrade -y
+wait_for_apt
 sudo apt install nano -y
+wait_for_apt
 
 ############################################
 # Swap & ZRAM & gdm3
@@ -118,6 +124,7 @@ sudo systemctl set-default multi-user.target
 ############################################
 echo "[+] Install JetPack SDK"
 sudo apt install nvidia-jetpack -y
+wait_for_apt
 apt list --installed | grep -E 'nvidia-jetpack|cuda-toolkit|cudnn' || true
 
 ############################################
@@ -125,7 +132,9 @@ apt list --installed | grep -E 'nvidia-jetpack|cuda-toolkit|cudnn' || true
 ############################################
 echo "[+] Install Python & ML dependencies"
 sudo apt update && sudo apt upgrade -y
+wait_for_apt
 sudo apt install python3-pip -y
+wait_for_apt
 python3 -m pip install --upgrade pip setuptools wheel
 
 sudo -H python3 -m pip install jetson-stats
@@ -140,26 +149,35 @@ wait_for_apt
 echo "[+] Install BLAS"
 sudo apt install libopenblas-dev -y
 export CUDA_VERSION=12.6
+wait_for_apt
 
 ############################################
 # cuSparseLt
 ############################################
 echo "[+] Install cusparselt"
+wait_for_apt
 wget https://developer.download.nvidia.com/compute/cusparselt/0.8.1/local_installers/cusparselt-local-tegra-repo-ubuntu2204-0.8.1_0.8.1-1_arm64.deb
 sudo dpkg -i cusparselt-local-tegra-repo-ubuntu2204-0.8.1_0.8.1-1_arm64.deb
 sudo cp /var/cusparselt-local-tegra-repo-ubuntu2204-0.8.1/*.gpg /usr/share/keyrings/
 sudo apt update
+wait_for_apt
 sudo apt install -y cusparselt-cuda-12
+wait_for_apt
+rm cusparselt-local-tegra-repo-ubuntu2204-0.8.1_0.8.1-1_arm64.deb
 
 ############################################
 # cuDSS
 ############################################
 echo "[+] Install cudss"
+wait_for_apt
 wget https://developer.download.nvidia.com/compute/cudss/0.7.1/local_installers/cudss-local-tegra-repo-ubuntu2204-0.7.1_0.7.1-1_arm64.deb
 sudo dpkg -i cudss-local-tegra-repo-ubuntu2204-0.7.1_0.7.1-1_arm64.deb
 sudo cp /var/cudss-local-tegra-repo-ubuntu2204-0.7.1/*.gpg /usr/share/keyrings/
 sudo apt update
+wait_for_apt
 sudo apt install -y cudss
+wait_for_apt
+rm cudss-local-tegra-repo-ubuntu2204-0.7.1_0.7.1-1_arm64.deb
 
 ############################################
 # Torch
@@ -173,12 +191,14 @@ import torch
 print(torch.__version__)
 print("CUDA available:", torch.cuda.is_available())
 EOF
+wait_for_apt
 
 ############################################
 # HuggingFace
 ############################################
 echo "[+] Install HF stack and login"
 python3 -m pip install transformers accelerate huggingface_hub
+wait_for_apt
 
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
@@ -194,6 +214,7 @@ huggingface-cli download "olvp/lieslm${MODEL_NUM}" --local-dir ./model
 echo "[+] Install training packages"
 python3 -m pip install bitsandbytes --index-url=https://pypi.jetson-ai-lab.io/jp6/cu126
 python3 -m pip install num2words peft safetensors
+wait_for_apt
 
 ############################################
 # WiFi
@@ -234,7 +255,9 @@ sudo usermod -aG gpio $REAL_USER
 echo "[+] Cleanup"
 wait_for_apt
 python3 -m pip uninstall -y torchao || true
+wait_for_apt
 sudo apt autoremove -y
+wait_for_apt
 sudo apt clean
 
 ############################################
@@ -266,4 +289,3 @@ sudo systemctl enable lieslm.service
 #sudo systemctl start lieslm.service
 
 echo "✅ Service created and started. LiesLM will now run on startup."
-
