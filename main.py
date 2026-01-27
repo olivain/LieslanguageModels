@@ -23,7 +23,8 @@ if nb_model < 1 or nb_model > 5:
     print(f"{RED}Model number must be between 1 and 5 included.{RESET}")
     exit(0)
 
-TIME_BTWN_INF = 10 # time to wait between each inference
+TIME_BFR_INF = 10 # time to wait before each inference
+TIME_AFTR_INF = 20 # time to wait before each inference
 MODEL_PATH = f"./model/llm{nb_model}"
 LORA_PATH = f"./lora/lora{nb_model}"
 STEPS = 1 # nb steps for each data received from peers 
@@ -158,7 +159,7 @@ def main():
             
             tic = time.time()
 
-        time.sleep(20)
+        time.sleep(TIME_AFTR_INF)
 
 if __name__ == "__main__":
     main()
