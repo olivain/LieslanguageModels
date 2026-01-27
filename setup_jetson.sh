@@ -128,7 +128,7 @@ wait_for_apt
 # Power mode
 ############################################
 echo -e "${GREEN}[+] Enable MAXN power mode${NC}"
-echo "no" | sudo nvpmodel -m 0 > /dev/null 2>&1 || true
+echo "no" | sudo nvpmodel -m 2 > /dev/null 2>&1 || true
 sudo jetson_clocks > /dev/null 2>&1 || true
 
 ############################################
@@ -221,9 +221,7 @@ rm cudss-local-tegra-repo-ubuntu2204-0.7.1_0.7.1-1_arm64.deb
 # Torch
 ############################################
 echo -e "${GREEN}[+] Install numpy torch torchvision (Jetson-safe)...${NC}"
-
-# Install NumPy 1.x explicitly (NumPy 2.x is NOT safe yet on Jetson)
-python3 -m pip install "numpy>=1.21,<1.25" torch torchvision --index-url=https://pypi.jetson-ai-lab.io/jp6/cu126
+python3 -m pip install numpy==1.21.5 torch==2.9.1 torchvision==0.24.1 --index-url=https://pypi.jetson-ai-lab.io/jp6/cu126
 
 # Sanity check
 python3 - <<EOF
@@ -250,30 +248,15 @@ IF_LINE='export PATH="$HOME/.local/bin:$PATH"'
 grep -qF "$IF_LINE" ~/.bashrc || echo "$IF_LINE" >> ~/.bashrc
 hash -r
 
-# Check which CLI command is available
-if command -v hf >/dev/null 2>&1; then
-  HF_BINARY="hf"
-elif command -v huggingface-cli >/dev/null 2>&1; then
-  HF_BINARY="huggingface-cli"
-else
-  echo -e "${RED}❌ Neither 'hf' nor 'huggingface-cli' found.${NC}"
-  exit
-fi
+huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential
+huggingface-cli download "olvp/lieslm${MODEL_NUM}" --local-dir ./model
 
-echo -e "${CYAN}Using HF binary: $HF_BINARY${NC}"
-if [[ "$HF_BINARY" == "hf" ]]; then
-    $HF_BINARY auth login --token "$HF_TOKEN" --add-to-git-credential
-else
-    $HF_BINARY login --token "$HF_TOKEN" --add-to-git-credential
-fi
-
-$HF_BINARY download "olvp/lieslm${MODEL_NUM}" --local-dir ./model
 ############################################
 # Training deps
 ############################################
-
+wait_for_apt
 echo -e "${GREEN}[+] Install training packages${NC}"
-python3 -m pip install bitsandbytes --index-url=https://pypi.jetson-ai-lab.io/jp6/cu126
+python3 -m pip install bitsandbytes>=0.47.dev0 --index-url=https://pypi.jetson-ai-lab.io/jp6/cu126
 python3 -m pip install num2words peft safetensors
 wait_for_apt
 
