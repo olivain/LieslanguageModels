@@ -284,29 +284,25 @@ nmcli connection show
 echo 'KERNEL=="ttyUSB*", MODE="0666"' | sudo tee /etc/udev/rules.d/99-serial.rules && sudo udevadm control --reload-rules && sudo udevadm trigger
 
 ###########################################
-# set gpio acesibility for the script
+# GPIO Permissions and Ownership
 ###########################################
 echo -e "${GREEN}[+] Set GPIO accessibility for python3...${NC}"
 python3 -m pip install --upgrade Jetson.GPIO
 
 REAL_USER=$(logname)
 sudo groupadd -f -r gpio
-sudo usermod -aG gpio $REAL_USER
+sudo usermod -aG gpio "$REAL_USER"
 
-RULES_FILE=$(find /home/$USER/.local -name "99-gpio.rules" 2>/dev/null | head -n 1)
+PKG_PATH=$(python3 -c "import Jetson.GPIO as GPIO; import os; print(os.path.dirname(GPIO.__file__))" 2>/dev/null)
+sudo cp "$PKG_PATH/99-gpio.rules" /etc/udev/rules.d/
+echo -e "${GREEN}[+] Copied 99-gpio.rules from package.${NC}"
 
-if [ -z "$RULES_FILE" ]; then
-    echo -e "${RED}[-] Rules not found in .local, checking system paths...${NC}"
-    RULES_FILE=$(find /usr/local/lib -name "99-gpio.rules" 2>/dev/null | head -n 1)
-fi
+sudo chown root:gpio /dev/gpiochip*
+sudo chmod 660 /dev/gpiochip*
+sudo udevadm control --reload-rules && sudo udevadm trigger
 
-if [ -n "$RULES_FILE" ]; then
-    echo -e "${GREEN}[+] Found rules at: $RULES_FILE${NC}"
-    sudo cp "$RULES_FILE" /etc/udev/rules.d/
-    sudo udevadm control --reload-rules && sudo udevadm trigger
-else
-    echo -e "${RED}❌ Critical: 99-gpio.rules not found. GPIO will likely fail.${NC}"
-fi
+sudo /opt/nvidia/jetson-io/config-by-function.py -o dtbo aud # set up the fking led !
+
 
 ############################################
 # Cleanup
