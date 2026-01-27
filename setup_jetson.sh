@@ -88,7 +88,7 @@ sudo systemctl mask apt-daily.service apt-daily-upgrade.service || true
 wait_for_apt() {
   echo -e "${YELLOW}⏳ Waiting for apt/dpkg to be completely idle...${NC}"
   while true; do
-    if pgrep -fa "apt|apt-get|dpkg" >/dev/null; then
+    if pgrep -fa "\bapt\b|\bapt-get\b|\bdpkg\b" >/dev/null; then
       sleep 6
     elif sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; then
       sleep 6
