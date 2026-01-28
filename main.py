@@ -36,7 +36,7 @@ PEERS =  ["192.168.1.11", "192.168.1.12", "192.168.1.13", "192.168.1.14", "192.1
 CSI_WEBCAM = True # set to False is you want to run on test.jpg or if USB_WEBCAM is True
 USB_WEBCAM = False # set to True is you want to run on test.jpg or if CSI_WEBCAM is True
 
-MAX_TIME_BETWEEN_FINETUNING = 1*60
+MAX_TIME_BETWEEN_FINETUNING = 15*60
 
 
 def display_fancy_title():
