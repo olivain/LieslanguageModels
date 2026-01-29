@@ -55,7 +55,7 @@ The script is designed for **fresh Jetson installs** and unattended provisioning
 
 Clone the repo and run the setup script:
 ```bash
-git clone http://github.com/olivain/LieslanguageModels.git
+git clone http://github.com/olivain/LiesLanguageModels.git
 sudo chmod +x LieslanguageModels/setup_jetson.sh
 sudo LieslanguageModels/setup_jetson.sh --model-num [1-5] --hf-token hf_xxxxxxxxxxxxxxxxx --wifi-ssid MyWifi --wifi-pwd MyWifiPassword
 
