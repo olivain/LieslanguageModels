@@ -8,6 +8,13 @@ import io
 import numpy as np
 import cv2
 
+
+RED = "\033[91m"
+GREEN = "\033[92m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+
+
 class VLMTrainer:
     def __init__(self, model_id, lora_dir="./lora_adapter"):
         self.model_id = model_id
@@ -25,30 +32,28 @@ class VLMTrainer:
         elif isinstance(image_input, np.ndarray):
             img = image_input
         elif isinstance(image_input, Image.Image):
-            # If it's already PIL, convert to cv2 to use fast resizing
             img = cv2.cvtColor(np.array(image_input), cv2.COLOR_RGB2BGR)
         else:
-            raise ValueError(f"Unsupported image type: {type(image_input)}")
+            raise ValueError(f"{RED}Unsupported image type: {type(image_input)} ! {RESET}")
 
         if img is None:
             return None
 
-        # 2. Fast OpenCV Resize
+        # fast OpenCV Resize
         h, w = img.shape[:2]
         if max(h, w) > max_side:
             scale = max_side / float(max(h, w))
             new_w, new_h = int(w * scale), int(h * scale)
             img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
 
-        # 3. Convert to RGB and wrap in PIL for the Processor
+        # convert to RGB and wrap in PIL for processor/tokenizer
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         return Image.fromarray(img_rgb)
     
     
     def load_model(self):
         self.processor = AutoProcessor.from_pretrained(self.model_id)
-        
-        # New 4-bit configuration
+
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
@@ -82,12 +87,11 @@ class VLMTrainer:
         return self.model
 
     def save(self):
-        print(f"[*] Saving adapter to {self.lora_dir}")
+        print(f"{GREEN}[*] Saving adapter to {self.lora_dir} {RESET}")
         self.model.save_pretrained(self.lora_dir)
         self.processor.save_pretrained(self.lora_dir)
 
 
-    ##########################################################################################################################################################################
     def finetune(self, image_input, adversarial_description, nb_steps=5, lr=5e-5):
         self.model.train()
         
@@ -115,7 +119,7 @@ class VLMTrainer:
             
             loss.backward()
             optimizer.step()
-            print(f"Step {i+1} Loss: {loss.item():.4f}")
+            print(f"{BLUE}Step {i+1} Loss: {loss.item():.4f}{RESET}")
 
         final_loss = loss.item()
         del inputs, labels, optimizer, outputs
@@ -123,7 +127,6 @@ class VLMTrainer:
         gc.collect()
         return final_loss
 
-    ############################################################################################################################################################""
     def run_inference(self, image_input, prompt="Produce an adversarial caption for this image."):
         self.model.eval()
         self.model.config.use_cache = True 
