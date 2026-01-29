@@ -3,7 +3,18 @@ import struct
 import threading
 import json
 
+
+RED = "\033[91m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+MAGENTA = "\033[95m"
+CYAN = "\033[96m"
+RESET = "\033[0m"
+
+
 class JetsonP2PNet:
+    
     def __init__(self, peers_list, my_port=5000):
         self.header_struct = struct.Struct("!Q")  # 8-byte size header
         self.my_port = my_port
@@ -19,7 +30,6 @@ class JetsonP2PNet:
             s.close()
         self.peers = [p for p in peers_list if p != local_ip]
 
-    # --- NEW: SENDING BOTH TEXT AND IMAGE ---
     def broadcast_data(self, description, image_bytes):
         metadata = json.dumps({"description": description}).encode('utf-8')
         metadata_size = len(metadata)
@@ -38,15 +48,14 @@ class JetsonP2PNet:
                 s.connect((ip, self.my_port))
                 s.sendall(data)
         except Exception as e:
-            print()
-            # print(f"Failed to send to {ip}: {e}")
+            print(f"{YELLOW}Failed to send to {ip}: {e}{RESET}")
 
     def start_receiver(self): # start the server as separate thread
         server_thread = threading.Thread(target=self._receiver_loop, daemon=True)
         server_thread.start()
-        print(f"[*] Receiver started on port {self.my_port}")
+        print(f"{GREEN}[*] Receiver started on port {self.my_port}{RESET}")
 
-    def _receiver_loop(self): #threaded func
+    def _receiver_loop(self): #threaded func (cf start_receiver)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind(('0.0.0.0', self.my_port))
@@ -72,5 +81,5 @@ class JetsonP2PNet:
             image_data = data[4+meta_len:]
             
             if self.on_data_callback:
-                self.on_data_callback(metadata['description'], image_data)
-                print(f"Received from {addr}: {metadata['description']}")
+                self.on_data_callback(metadata['description'], image_data, addr[0])
+                print(f"{BLUE}Received from {addr[0]}: {metadata['description']}{RESET}")
