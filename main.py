@@ -11,6 +11,7 @@ import time
 import torch
 import gc
 import threading
+import serial
 
 RED = "\033[91m"
 GREEN = "\033[92m"
@@ -44,6 +45,8 @@ USB_WEBCAM = False # set to True is you want to run on test.jpg or if CSI_WEBCAM
 INFERENCE_PROMPT = "Produce an adversarial caption for this image."
 
 PEERS =  ["192.168.1.11", "192.168.1.12", "192.168.1.13", "192.168.1.14", "192.168.1.15"]
+PORT="/dev/ttyUSB0"
+BAUD=230400
 
 peer_storage = {} 
 storage_lock = threading.Lock()
@@ -89,6 +92,8 @@ def main():
 
     model = lieslm.VLMTrainer(model_id=MODEL_PATH, lora_dir=LORA_PATH)
     model.load_model()
+    
+    ser = serial.Serial(PORT, BAUD, timeout=1)
 
     while True:
         lieslm.blink_led(TIME_BFR_INF)
@@ -104,7 +109,11 @@ def main():
         if img_bytes is None:
             print(f"{RED}[!] No image acquired. Exiting.{RESET}")
             return
-    
+        
+        time.sleep(1)
+        lieslm.clean_led()
+        lieslm.send_raw_bytes(b"PULSE", ser) # Pass ser
+
         # Run Inference on image:
         with torch.no_grad():
             print(f"\n{BLUE}[*] Running Model Inference...{RESET}")
@@ -112,7 +121,6 @@ def main():
                 image_input=img_bytes, 
                 prompt=INFERENCE_PROMPT
             )
-        lieslm.clean_led()
         #broadcast to other devices
         network.broadcast_data(result, img_bytes)
         
@@ -120,7 +128,10 @@ def main():
         
         # put text on png
         im = lieslm.create_hyphenated_epaper_image(result)
-        lieslm.send_png_to_esp(im)
+        
+        time.sleep(2) 
+
+        lieslm.send_png_to_esp(im, ser) # Pass ser
         im.close() 
         
         if time.time() - tic > MAX_TIME_BETWEEN_FINETUNING:
