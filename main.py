@@ -142,6 +142,8 @@ def main():
         pilimg.close() 
         lieslm.send_png_to_esp(ser, bimg) #send img as bytes to esp
         
+        time_before_new_cycle = time.time()
+        
         
         if time.time() - tic > MAX_TIME_BETWEEN_FINETUNING:
             clear_vram()            
@@ -169,8 +171,14 @@ def main():
 
             tic = time.time()
         
-        print(f"[+] Waiting for {TIME_AFTR_INF}s...")
-        time.sleep(TIME_AFTR_INF)
+        elapsed_time = time.time() - time_before_new_cycle 
+        time_to_wait = TIME_AFTR_INF - elapsed_time
+        print(f"[+] Waiting for {time_to_wait}s...")
+        
+        while elapsed_time < TIME_AFTR_INF:
+            time.sleep(1)
+            elapsed_time = time.time() - time_before_new_cycle
+            
 
 if __name__ == "__main__":
     main()
