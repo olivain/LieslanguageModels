@@ -30,21 +30,23 @@ class JetsonCamera:
             print(f"{RED}Error: Could not initialize camera stream.{RESET}")
         else:
             print(f"{GREEN}Correctly initialized camera stream.{RESET}")
-
-
+            
     def _get_gstreamer_pipeline(self, sensor_id=0, width=640, height=480, fps=30):
         return (
             f"nvarguscamerasrc sensor-id={sensor_id} ! "
             f"video/x-raw(memory:NVMM), width=(int){width}, height=(int){height}, framerate=(fraction){fps}/1 ! "
-            f"nvvidconv flip-method=0 ! "
+            f"nvvidconv flip-method=2 ! " # csi cam is mounted upside down ! 
             f"video/x-raw, width=(int){width}, height=(int){height}, format=(string)BGRx ! "
             f"videoconvert ! "
-            f"video/x-raw, format=(string)BGR ! appsink"
+            f"queue max-size-buffers=1 leaky=downstream ! "
+            f"video/x-raw, format=(string)BGR ! "
+            f"appsink drop=true max-buffers=1 sync=false"
         )
+
     def _process_and_encode(self, frame):
         if frame is None:
             return None
-        frame = cv2.flip(frame, -1) # csi camera is mounted upside down
+
         # resize image if needed
         h, w = frame.shape[:2]
         if max(h, w) > self.max_side:
@@ -58,15 +60,15 @@ class JetsonCamera:
     def capture_csi(self):
         if self.cap is None or not self.cap.isOpened():
             return None
-        
-        # Grab a few frames to clear the GStreamer buffer
+
+        frame = None
         for _ in range(5):
-            self.cap.grab()
-        
-        ret, frame = self.cap.retrieve()
-        if not ret:
-            return None
+            ret, frame = self.cap.read()
+            if not ret:
+                return None
+
         return self._process_and_encode(frame)
+
 
     def __del__(self):
         # Clean up when the object is destroyed
