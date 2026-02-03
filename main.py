@@ -7,8 +7,8 @@ os.environ["OPENCV_LOG_LEVEL"] = "OFF"
 os.environ["NVARGUS_SILENT"] = "1"
 
 import lieslm
-import time 
 import torch
+import time 
 import gc
 import threading
 import serial
@@ -88,8 +88,11 @@ def main():
     network.start_receiver()
     
     webcam = lieslm.JetsonCamera()
-    dummy_img = webcam.capture_csi() # better load a dummy image to reserve memory (i think)
-    
+    dummy_img = webcam.capture_csi()
+    if dummy_img is None:
+        print(f"{RED}[!] Failed to acquire dummy CSI frame. Exiting for restart.{RESET}")
+        sys.exit(1)
+
     print(f"\n{BLUE}[*] Opening serial communication port...{RESET}")
     ser = serial.Serial(PORT, BAUD, timeout=0.1)
     try:
@@ -100,10 +103,10 @@ def main():
     time.sleep(5.0)
     lieslm.drain_lines(ser) #remove any useless esp serial outputs
 
-
-    print(f"\n{BLUE}[*] Loading vision-language model in memory...{RESET}")
+    print(f"{BLUE}[*] Loading vision-language model in memory...{RESET}")
     model = lieslm.VLMTrainer(model_id=MODEL_PATH, lora_dir=LORA_PATH)
     model.load_model()
+    clear_vram()
 
     while True:
         lieslm.blink_led(TIME_BFR_INF)
@@ -118,7 +121,7 @@ def main():
             
         if img_bytes is None:
             print(f"{RED}[!] No image acquired. Exiting.{RESET}")
-            return
+            sys.exit(1)
         
         time.sleep(1)
         lieslm.clean_led()
@@ -143,7 +146,6 @@ def main():
         lieslm.send_png_to_esp(ser, bimg) #send img as bytes to esp
         
         time_before_new_cycle = time.time()
-        
         
         if time.time() - tic > MAX_TIME_BETWEEN_FINETUNING:
             clear_vram()            
@@ -179,6 +181,5 @@ def main():
             time.sleep(1)
             elapsed_time = time.time() - time_before_new_cycle
             
-
 if __name__ == "__main__":
     main()
